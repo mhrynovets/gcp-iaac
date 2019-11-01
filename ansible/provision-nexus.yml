@@ -1,0 +1,13 @@
+---
+- hosts: all
+  gather_facts: yes
+  vars:
+    nexus_admin_password: "1234"
+    httpd_setup_enable: true  
+  roles:
+    - role: update-os
+      become: yes  
+    - role: './external_roles/cust-java'
+      become: yes      
+    - role: './external_roles/cust-nexus'
+      become: yes      

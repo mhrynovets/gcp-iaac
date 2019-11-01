@@ -1,0 +1,42 @@
+---
+- hosts: all
+  gather_facts: yes
+  become: true
+  tasks:
+  - name: "Add the user '{{ serviceName }}' with a bash shell"
+    user:
+      name: "{{ serviceName }}"
+      shell: /usr/bin/false
+
+  - name: "Creating {{ serviceName }} directory"
+    file: 
+      path: "{{ remotePath }}"
+      state: directory
+      owner: "{{ serviceName }}"
+      group: "{{ serviceName }}"    
+
+  - name: "Removing old {{ remoteFile }} file"
+    file: 
+      path: "{{ remotePath }}/{{ remoteFile }}"
+      state: absent 
+
+  - name: Get file from repository
+    get_url:
+      url: "{{ artifactSourceURL }}"
+      dest: "{{ remotePath }}/{{ remoteFile }}"
+      url_username: "{{ lookup('env','NEXUS_USER') }}"
+      url_password: "{{ lookup('env','NEXUS_PASS') }}"
+
+  - name: "Template a file to /etc/systemd/system/{{ serviceName }}.service"
+    template:
+      src: service.j2
+      dest: "/etc/systemd/system/{{ serviceName }}.service"
+      owner: root
+      group: root
+      mode: '0744'
+
+  - name: "enable service {{ serviceName }} and ensure it enabled"
+    systemd:
+      name: "{{ serviceName }}"
+      enabled: yes
+      state: started

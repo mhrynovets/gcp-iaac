@@ -1,0 +1,9 @@
+creds/
+terraform.tfstate*
+.terraform.tfstate*
+.terraform/
+.ansible/
+ssh_keys
+external_roles/
+*.pem
+*.retry

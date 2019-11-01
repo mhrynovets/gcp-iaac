@@ -1,0 +1,13 @@
+---
+- hosts: all
+  gather_facts: yes
+  roles:
+    - role: update-os
+      become: yes     
+    - role: './external_roles/cust-jenkins'
+      become: yes  
+  
+  post_tasks:
+    - name: Install Git
+      become: yes  
+      package: name=git state=present

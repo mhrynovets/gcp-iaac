@@ -1,0 +1,52 @@
+---
+- hosts: all
+  gather_facts: yes
+  vars:
+    www_user:  "{{ansible_user_id}}"
+  roles:
+    - role: update-os
+      become: yes  
+
+  post_tasks:
+  - name: Install nginx
+    become: yes  
+    package:
+      name: "nginx"
+      state: latest
+
+  - name: Fix npm one-page 404 error
+    become: yes  
+    lineinfile:
+      path: /etc/nginx/sites-available/default
+      regexp: '^[^#]*try_files \$uri \$uri\/ =404;'
+      line: "try_files $uri $uri/ /index.html;"
+    notify:
+    - restart nginx on changes
+
+  - name: Ensure group 'www-data' exists
+    become: yes  
+    group:
+      name: www-data
+      state: present
+
+  - name: Check ownership of '/var/www' directory, enabling group inheritance
+    become: yes  
+    file:
+      path: /var/www
+      state: directory
+      mode: g+rws
+      recurse: yes
+      owner: www-data
+      group: www-data
+
+  - name: "Adding existing user '{{ www_user }}' to group www-data"
+    become: yes  
+    user:
+      name: "{{ www_user }}"
+      groups: www-data
+      append: yes
+
+  handlers:
+    - name: restart nginx on changes
+      become: true    
+      service: name=nginx state=restarted
